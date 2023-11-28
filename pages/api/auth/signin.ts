@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import * as jose from "jose";
 import bcrypt from "bcrypt";
 import validator from "validator";
+import { setCookie } from "cookies-next";
 
 const prisma = new PrismaClient();
 export default async function signin(req: NextApiRequest, res: NextApiResponse) {
@@ -25,24 +26,32 @@ export default async function signin(req: NextApiRequest, res: NextApiResponse) 
             return res.status(400).json({ error: errors[0] });
         }
 
-        const userWithEmail = await prisma.user.findUnique({ where: { email } })
+        const user = await prisma.user.findUnique({ where: { email } })
 
-        if (!userWithEmail) {
-            return res.status(401).json({errorMessage: "Email or password is invalid."})
+        if (!user) {
+            return res.status(401).json({ errorMessage: "Email or password is invalid." })
         }
 
-        const isMatch = bcrypt.compare(password, userWithEmail.password);
+        const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json({errorMessage: "Email or password is invalid."})
+            return res.status(401).json({ errorMessage: "Email or password is invalid." })
         }
 
         const alg = "HS256";
         const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-        const token = await new jose.SignJWT({ email: userWithEmail.email }).setProtectedHeader({ alg }).setExpirationTime("24h").sign(secret)
+        const token = await new jose.SignJWT({ email: user.email }).setProtectedHeader({ alg }).setExpirationTime("24h").sign(secret)
 
-        res.status(200).json({ status: "OK", token })
+        setCookie("jwt", token, { req, res, maxAge: 60 * 6 * 24 });
+
+        res.status(200).json({
+            firstName: user.first_name,
+            lastName: user.last_name,
+            email: user.email,
+            phone: user.phone,
+            city: user.city
+        })
     }
 
-    return res.status(404).json({errorMessage: "Unknown endpoint."});
+    return res.status(404).json({ errorMessage: "Unknown endpoint." });
 }
