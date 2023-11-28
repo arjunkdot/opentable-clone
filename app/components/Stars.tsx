@@ -22,8 +22,8 @@ function Stars({ reviews }: { reviews: Review[] }) {
         stars.push(emptyStar);
       }
     }
-    return stars.map((star) => {
-      return <Image src={star} className="w-4 h-4 mr-1" alt="" />;
+    return stars.map((star, index) => {
+      return <Image key={index} src={star} className="w-4 h-4 mr-1" alt="" />;
     });
   };
   return <div className="flex items-center">{renderStars()}</div>;

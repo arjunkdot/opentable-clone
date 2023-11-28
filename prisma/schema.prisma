@@ -22,7 +22,7 @@ model Restaurant {
   price       PRICE
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
-  reviews Review[]
+  reviews     Review[]
   items       Item[]
   location_id Int
   location    Location @relation(fields: [location_id], references: [id])
@@ -62,7 +62,7 @@ model User {
   first_name String
   last_name  String
   city       String
-  email      String
+  email      String   @unique
   phone      String
   password   String
   reviews    Review[]
