@@ -1305,22 +1305,22 @@ export default async function handler(
       ],
     });
 
-    // await prisma.table.createMany({
-    //   data: [
-    //     {
-    //       restaurant_id: vivaanId,
-    //       seats: 4,
-    //     },
-    //     {
-    //       restaurant_id: vivaanId,
-    //       seats: 4,
-    //     },
-    //     {
-    //       restaurant_id: vivaanId,
-    //       seats: 2,
-    //     },
-    //   ],
-    // });
+    await prisma.table.createMany({
+      data: [
+        {
+          restaurant_id: vivaanId,
+          seats: 4,
+        },
+        {
+          restaurant_id: vivaanId,
+          seats: 4,
+        },
+        {
+          restaurant_id: vivaanId,
+          seats: 2,
+        },
+      ],
+    });
 
   res.status(200).json({ name: "hello" });
 }
