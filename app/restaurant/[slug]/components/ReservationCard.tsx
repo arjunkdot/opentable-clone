@@ -1,24 +1,46 @@
 "use client";
 import { useState } from "react";
-import { partySize, times } from "./../../../../data";
+import { partySize as partySizes, times } from "./../../../../data";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import useAvailabilities from "../../../../hooks/useAvailabilities";
+import { CircularProgress } from "@mui/material";
+import Link from "next/link";
+import {
+  convertToDisplayTime,
+  Time,
+} from "../../../../utils/convertToDisplayTime";
 
 function ReservationCard({
   openTime,
   closeTime,
+  slug,
 }: {
   openTime: string;
   closeTime: string;
+  slug: string;
 }) {
+  const { data, loading, error, fetchAvailabilities } = useAvailabilities();
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-
+  const [time, setTime] = useState(openTime);
+  const [partySize, setPartySize] = useState("2");
+  const [day, setDay] = useState(new Date().toISOString().split("T")[0]);
   const handleChangeDate = (date: Date | null) => {
     if (date) {
+      setDay(date.toISOString().split("T")[0]);
       return setSelectedDate(date);
     } else {
       return setSelectedDate(null);
     }
+  };
+
+  const handleClick = () => {
+    fetchAvailabilities({
+      slug,
+      day,
+      time,
+      partySize,
+    });
   };
 
   const filterTimeByRestaurantOpenWindow = () => {
@@ -37,7 +59,6 @@ function ReservationCard({
       if (time.time === closeTime) {
         isWithinWindow = false;
       }
-
     });
     return timesWithinWindow;
   };
@@ -49,8 +70,13 @@ function ReservationCard({
       </div>
       <div className="my-3 flex flex-col">
         <label htmlFor="">Party size</label>
-        <select name="" className="py-3 border-b font-light" id="">
-          {partySize.map((size) => (
+        <select
+          name=""
+          className="py-3 border-b font-light"
+          id=""
+          value={partySize}
+          onChange={(e) => setPartySize(e.target.value)}>
+          {partySizes.map((size) => (
             <option value={size?.value} key={size?.value}>
               {size?.label}
             </option>
@@ -70,7 +96,12 @@ function ReservationCard({
         </div>
         <div className="flex flex-col w-[48%]">
           <label htmlFor="">Time</label>
-          <select name="" id="" className="py-3 border-b font-light">
+          <select
+            name=""
+            id=""
+            className="py-3 border-b font-light"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}>
             {filterTimeByRestaurantOpenWindow().map((time, index) => (
               <option key={index} value={time.time}>
                 {time.displayTime}
@@ -80,10 +111,33 @@ function ReservationCard({
         </div>
       </div>
       <div className="mt-5">
-        <button className="bg-red-600 rounded w-full px-4 text-white font-bold h-16">
-          Find a Time
+        <button
+          className="bg-red-600 rounded w-full px-4 text-white font-bold h-16"
+          onClick={handleClick}
+          disabled={loading}>
+          {loading ? <CircularProgress color="inherit" /> : "Find a Time"}
         </button>
       </div>
+      {data && data.length ? (
+        <div className="mt-4">
+          <p className="text-reg font-bold">Select a time</p>
+          <div className="flex flex-wrap mt-2">
+            {data.map((time) => {
+              return time.available ? (
+                <Link
+                  href={`/reserve/${slug}?date=${day}T${time.time}&partySize=${partySize}}`}
+                  className="bg-red-600 cursor-pointer text-white p-2 w-24 text-center rounded mb-3 mr-3">
+                  <p className="text-small font-bold">
+                    {convertToDisplayTime(time.time as Time)}
+                  </p>
+                </Link>
+              ) : (
+                <p className="bg-gray-300 p-2 w-24 mb-3 rounded mr-3"></p>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

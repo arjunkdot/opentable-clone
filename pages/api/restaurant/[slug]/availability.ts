@@ -53,7 +53,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             slug
         },
         select: {
-            tables: true
+            tables: true,
+            open_time: true,
+            close_time: true,
         }
     })
 
@@ -80,5 +82,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
     })
 
-    return res.json({ searchTimesWithTables })
+    const availabilties = searchTimesWithTables.map(t => {
+        const sumSeats = t.tables.reduce((sum, table) => {
+            return sum + table.seats
+        }, 0);
+
+        return {
+            time: t.time,
+            available: sumSeats >= parseInt(partySize)
+        }
+    }).filter(availability => {
+        const timeIsAfterOpeningHours = new Date(`${day}T${availability.time}`) >= new Date(`${day}T${restaurant.open_time}`)
+        const timeIsbeforeClosingHours = new Date(`${day}T${availability.time}`) <= new Date(`${day}T${restaurant.close_time}`)
+
+        return timeIsAfterOpeningHours && timeIsbeforeClosingHours;
+    })
+
+    return res.json(availabilties)
 }
