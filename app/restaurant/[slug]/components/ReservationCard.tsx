@@ -125,7 +125,7 @@ function ReservationCard({
             {data.map((time) => {
               return time.available ? (
                 <Link
-                  href={`/reserve/${slug}?date=${day}T${time.time}&partySize=${partySize}}`}
+                  href={`/reserve/${slug}?date=${day}T${time.time}&partySize=${partySize}`}
                   className="bg-red-600 cursor-pointer text-white p-2 w-24 text-center rounded mb-3 mr-3">
                   <p className="text-small font-bold">
                     {convertToDisplayTime(time.time as Time)}
